@@ -18,3 +18,13 @@ Url to swagger:
 ```bash
 http://localhost:80/swagger/index.html
 ```
+HttpPatch example:
+```bash
+[
+  {
+    "path": "itemName",
+    "op": "replace",
+    "value": "test"
+  }
+]
+```
