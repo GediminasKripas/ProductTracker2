@@ -5,7 +5,7 @@ git clone https://github.com/GediminasKripas/ProductsAPI.git
 ```
 Change directory:
 ```bash
-cd ProductAPI
+cd ProductsAPI
 ```
 
 Launch docker container:
