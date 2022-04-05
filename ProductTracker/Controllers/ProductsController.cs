@@ -26,14 +26,16 @@ namespace ProductTracker.Controllers
                 {
                     id = 1,
                     itemName = "Coca-cola",
-                    price = 0.89
+                    price = 0.89,
+                    kCal = 201
                 });
 
                 _context.Products.Add(new Product
                 {
                     id = 2,
                     itemName = "Pepsi",
-                    price = 0.89
+                    price = 0.89,
+                    url = "https://www.pepsi.com/en-us/uploads/images/twil-can.png"
                 });
 
                 _context.Products.Add(new Product
