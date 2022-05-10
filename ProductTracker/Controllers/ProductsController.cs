@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using ProductTracker.Models;
 
 namespace ProductTracker.Controllers
@@ -15,6 +17,7 @@ namespace ProductTracker.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ProductContext _context;
+        private readonly string contactsUrl = "http://contacts:5000/contacts/";
 
         public ProductsController(ProductContext context)
         {
@@ -27,7 +30,8 @@ namespace ProductTracker.Controllers
                     id = 1,
                     itemName = "Coca-cola",
                     price = 0.89,
-                    kCal = 201
+                    kCal = 201,
+                    supplierId = 12345
                 });
 
                 _context.Products.Add(new Product
@@ -35,7 +39,8 @@ namespace ProductTracker.Controllers
                     id = 2,
                     itemName = "Pepsi",
                     price = 0.89,
-                    url = "https://www.pepsi.com/en-us/uploads/images/twil-can.png"
+                    url = "https://www.pepsi.com/en-us/uploads/images/twil-can.png",
+                    supplierId = 11234
                 });
 
                 _context.Products.Add(new Product
@@ -52,9 +57,47 @@ namespace ProductTracker.Controllers
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
+        }
+
+        // GET: api/Products/contacts
+        [HttpGet("{id}/contacts")]
+        public async Task<ActionResult<ProductSupplierResponse>> GetProductSuplier(long id)
+        {
+            ProductSupplierResponse psresponse;
+            Supplier supplier;
+            Product product = await _context.Products.FindAsync(id);
+
+            if(product.supplierId == null)
+            {
+                return BadRequest("Product doesnt have supplier");
+            }
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    using (var response = await httpClient.GetAsync(contactsUrl + product.supplierId))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        supplier = JsonConvert.DeserializeObject<Supplier>(apiResponse);
+                    }
+                }
+
+                psresponse = new ProductSupplierResponse(product, supplier);
+
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);      
+                supplier = new Supplier();
+                psresponse = new ProductSupplierResponse();
+            }
+
+            return psresponse;
+
         }
 
         // GET: api/Products/5

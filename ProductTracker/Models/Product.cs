@@ -13,5 +13,7 @@ namespace ProductTracker.Models
         public double price { set; get; }
         public int? kCal { set; get; }
         public string? url { get; set; }
+        public int? supplierId { get; set; }
+
     }
 }
