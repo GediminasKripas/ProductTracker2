@@ -72,7 +72,7 @@ namespace ProductTracker.Controllers
         }
 
         // PUT: api/Products/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         [HttpPut("{id}")]
         public async Task<ActionResult<Product>> PutProduct(long id, Product product)
         {
@@ -109,14 +109,13 @@ namespace ProductTracker.Controllers
         }
 
         // POST: api/Products
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            //return CreatedAtAction("GetProduct", new { id = product.id }, product);
             return CreatedAtAction(nameof(GetProduct), new { id = product.id }, product);
         }
 
