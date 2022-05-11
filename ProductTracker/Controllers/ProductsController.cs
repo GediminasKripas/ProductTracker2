@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -26,8 +28,7 @@ namespace ProductTracker.Controllers
             if (!_context.Products.Any())
             {
                 _context.Products.Add(new Product
-                {
-                    id = 1,
+                { 
                     itemName = "Coca-cola",
                     price = 0.89,
                     kCal = 201,
@@ -36,7 +37,6 @@ namespace ProductTracker.Controllers
 
                 _context.Products.Add(new Product
                 {
-                    id = 2,
                     itemName = "Pepsi",
                     price = 0.89,
                     url = "https://www.pepsi.com/en-us/uploads/images/twil-can.png",
@@ -45,7 +45,6 @@ namespace ProductTracker.Controllers
 
                 _context.Products.Add(new Product
                 {
-                    id = 3,
                     itemName = "Fanta",
                     price = 0.89
                 });
@@ -62,15 +61,17 @@ namespace ProductTracker.Controllers
             return await _context.Products.ToListAsync();
         }
 
-        // GET: api/Products/contacts
+
+
+        // GET: api/Products/{id}/contacts
         [HttpGet("{id}/contacts")]
         public async Task<ActionResult<ProductSupplierResponse>> GetProductSuplier(long id)
         {
-            ProductSupplierResponse psresponse;
-            Supplier supplier;
+            ProductSupplierResponse psresponse = null;
+            Supplier supplier = null;
             Product product = await _context.Products.FindAsync(id);
 
-            if(product.supplierId == null)
+            if (product.supplierId == null)
             {
                 return BadRequest("Product doesnt have supplier");
             }
@@ -91,9 +92,8 @@ namespace ProductTracker.Controllers
             }
             catch (Exception exception)
             {
-                System.Diagnostics.Debug.WriteLine(exception);      
-                supplier = new Supplier();
-                psresponse = new ProductSupplierResponse();
+                System.Diagnostics.Debug.WriteLine(exception);
+                return StatusCode(503);
             }
 
             return psresponse;
@@ -150,6 +150,40 @@ namespace ProductTracker.Controllers
 
             return product;
         }
+        //Task<ActionResult<Supplier>>
+        [HttpPut("{id}/contacts")]
+        public async Task<IActionResult> PutProductContacts(long id, SupplierPut supplier)
+        {
+
+            var product = await _context.Products.FindAsync(id);
+
+            if(product == null)
+            {
+                return NotFound("Product doesnt exist!");
+            }
+            string apiResponse;
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    string json = JsonConvert.SerializeObject(supplier);
+                    var content = new StringContent(json);
+                    using (var response = await httpClient.PutAsync(contactsUrl + supplier.id.ToString(), content))
+                    {
+                        apiResponse = await response.Content.ReadAsStringAsync();
+                    }
+                }
+
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);
+                apiResponse = "Failed!";
+            }
+
+            return Ok(apiResponse);
+
+        }
 
         // POST: api/Products
 
@@ -162,6 +196,50 @@ namespace ProductTracker.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.id }, product);
         }
 
+        [HttpPost("contacts")]
+        public async Task<ActionResult<ProductSupplierResponse>> PostProductContacts(ProductSupplierResponse body)
+        {
+
+            if (body.supplier == null)
+            {
+                return BadRequest("Product doesnt have supplier");
+            }
+
+            Supplier supplier = body.supplier;
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    string json = JsonConvert.SerializeObject(supplier);
+                    var content = new StringContent(json);
+
+                    using (var response = await httpClient.PostAsync(contactsUrl, content))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                    }
+                }
+
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);
+            }
+
+            Product product = new Product(body);
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+            if (body.id == null) {
+                body.id = product.id;
+            }
+            if(body.supplierId == null)
+            {
+                body.supplierId = supplier.id;
+            }
+            return StatusCode(201, body);
+        }
+        
+
         // DELETE: api/Products/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Product>> DeleteProduct(long id)
@@ -172,8 +250,83 @@ namespace ProductTracker.Controllers
                 return NotFound();
             }
 
+            if(product.supplierId != null)
+            {
+
+                try
+                {
+                    using (var httpClient = new HttpClient())
+                    {
+                        using (var response = await httpClient.DeleteAsync(contactsUrl + product.supplierId))
+                        {
+                            string apiResponse = await response.Content.ReadAsStringAsync();
+                        }
+                    }
+
+                }
+                catch (Exception exception)
+                {
+                    System.Diagnostics.Debug.WriteLine(exception);
+                }
+
+            }
+
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Products/5
+        [HttpDelete("{id}/contacts")]
+        public async Task<ActionResult<Product>> DeleteProductContacts(long id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            if (product.supplierId == null)
+            {
+                return BadRequest("This product doesnt have supplier contacts!");
+            }
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    using (var response = await httpClient.DeleteAsync(contactsUrl + product.supplierId))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                    }
+                }
+
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);
+            }
+
+            product.supplierId = null;
+
+            _context.Entry(product).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return NoContent();
         }

@@ -1,12 +1,11 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProductTracker.Models
 {
-    public class Supplier
+    public class SupplierPut
     {
         //[JsonIgnore]
         public int id { get; set; }
@@ -19,7 +18,7 @@ namespace ProductTracker.Models
         //[JsonProperty("email")]
         public string email { get; set; }
 
-       public Supplier(ProductSupplierResponse response)
+        public SupplierPut(ProductSupplierResponse response)
         {
             Supplier supplier = response.supplier;
             id = supplier.id;
@@ -29,7 +28,6 @@ namespace ProductTracker.Models
             email = supplier.email;
         }
 
-        public Supplier() { }
-
+        public SupplierPut() { }
     }
 }
