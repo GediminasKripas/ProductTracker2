@@ -1,7 +1,7 @@
 # ProductsAPI
 Clone the repository
 ```bash
-git clone https://github.com/GediminasKripas/ProductTracker2.git
+git clone --recurse-submodules https://github.com/GediminasKripas/ProductTracker2.git
 ```
 Change directory:
 ```bash

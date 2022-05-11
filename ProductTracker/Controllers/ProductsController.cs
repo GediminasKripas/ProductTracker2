@@ -56,16 +56,57 @@ namespace ProductTracker.Controllers
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<dynamic>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            var products = await _context.Products.ToListAsync();
+
+            List<Object> productsResponse = new List<object>();
+
+            foreach(var item in products)
+            {
+
+                if(item.supplierId == null)
+                {
+                    productsResponse.Add(item);
+                }
+                else
+                {
+
+                    Supplier supplier = null;
+
+                    try
+                    {
+                        using (var httpClient = new HttpClient())
+                        {
+                            using (var response = await httpClient.GetAsync(contactsUrl + item.supplierId))
+                            {
+                                string apiResponse = await response.Content.ReadAsStringAsync();
+                                supplier = JsonConvert.DeserializeObject<Supplier>(apiResponse);
+                            }
+                        }
+
+                        ProductSupplierResponse psresponse = new ProductSupplierResponse(item, supplier);
+                        productsResponse.Add(psresponse);
+
+                    }
+                    catch (Exception exception)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exception);
+                        productsResponse.Add(new ProductSupplierResponse(item));
+                    }
+
+                }
+
+            }
+
+            return productsResponse;
         }
 
 
 
         // GET: api/Products/{id}/contacts
         [HttpGet("{id}/contacts")]
-        public async Task<ActionResult<ProductSupplierResponse>> GetProductSuplier(long id)
+        public async Task<ActionResult<dynamic>> GetProductSuplier(long id)
         {
             ProductSupplierResponse psresponse = null;
             Supplier supplier = null;
@@ -98,7 +139,7 @@ namespace ProductTracker.Controllers
             catch (Exception exception)
             {
                 System.Diagnostics.Debug.WriteLine(exception);
-                return StatusCode(503);
+                return product;
             }
 
             return psresponse;
@@ -166,7 +207,7 @@ namespace ProductTracker.Controllers
             {
                 return NotFound("Product doesnt exist!");
             }
-            string apiResponse;
+            /*string apiResponse;
             try
             {
                 using (var httpClient = new HttpClient())
@@ -184,10 +225,27 @@ namespace ProductTracker.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exception);
                 return StatusCode(503);
+            }*/
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    var json = JsonConvert.SerializeObject(supplier);
+                    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                    using (var response = await httpClient.PutAsync(contactsUrl + product.supplierId.ToString(), httpContent))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                    }
+
+
+                }
             }
-
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);
+                return StatusCode(503);
+            }
             return StatusCode(200, supplier);
-
         }
 
         // POST: api/Products
@@ -217,7 +275,7 @@ namespace ProductTracker.Controllers
                 using (var httpClient = new HttpClient())
                 {
                     string json = JsonConvert.SerializeObject(supplier);
-                    var content = new StringContent(json);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     using (var response = await httpClient.PostAsync(contactsUrl, content))
                     {

@@ -26,6 +26,23 @@ namespace ProductTracker.Models
             supplierId = supplier.id;
             this.supplier = supplier;
         }
+        public ProductSupplierResponse(Product product)
+        {
+            id = product.id;
+            itemName = product.itemName;
+            price = product.price;
+            kCal = product.kCal;
+            url = product.url;
+            if (product.supplierId == null)
+            {
+                supplierId = null;
+            }
+            else
+            {
+                supplierId = product.supplierId;
+            }
+            supplier = null;
+        }
         public ProductSupplierResponse() { }
 
     }
