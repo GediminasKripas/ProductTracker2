@@ -8,10 +8,9 @@ Change directory:
 cd ProductTracker2
 ```
 
-Launch docker container:
+Launch docker containers:
 ```bash
-docker build -t productapi .
-docker run -it -dp 80:80 productapi
+docker-compose up -d
 ```
 ## Swagger
 Url to swagger:
