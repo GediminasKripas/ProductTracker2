@@ -8,15 +8,10 @@ namespace ProductTracker.Models
 {
     public class Supplier
     {
-        //[JsonIgnore]
         public int id { get; set; }
-        //[JsonProperty("surname")]
         public string surname { get; set; }
-        //[JsonProperty("name")]
         public string name { get; set; }
-        //[JsonProperty("number")]
         public string number { get; set; }
-        //[JsonProperty("email")]
         public string email { get; set; }
 
        public Supplier(ProductSupplierResponse response)

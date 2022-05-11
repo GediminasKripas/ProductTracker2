@@ -171,9 +171,9 @@ namespace ProductTracker.Controllers
             {
                 using (var httpClient = new HttpClient())
                 {
-                    string json = JsonConvert.SerializeObject(supplier);
+                    var json = JsonConvert.SerializeObject(supplier);
                     var content = new StringContent(json);
-                    using (var response = await httpClient.PutAsync(contactsUrl + supplier.id.ToString(), content))
+                    using (var response = await httpClient.PutAsync(contactsUrl + product.supplierId, content))
                     {
                         apiResponse = await response.Content.ReadAsStringAsync();
                     }
@@ -183,7 +183,7 @@ namespace ProductTracker.Controllers
             catch (Exception exception)
             {
                 System.Diagnostics.Debug.WriteLine(exception);
-                apiResponse = "Failed!";
+                return StatusCode(503);
             }
 
             return StatusCode(200, supplier);
@@ -229,6 +229,7 @@ namespace ProductTracker.Controllers
             catch (Exception exception)
             {
                 System.Diagnostics.Debug.WriteLine(exception);
+                return StatusCode(503);
             }
 
             Product product = new Product(body);
@@ -272,6 +273,7 @@ namespace ProductTracker.Controllers
                 catch (Exception exception)
                 {
                     System.Diagnostics.Debug.WriteLine(exception);
+                    return StatusCode(503);
                 }
 
             }
@@ -311,6 +313,7 @@ namespace ProductTracker.Controllers
             catch (Exception exception)
             {
                 System.Diagnostics.Debug.WriteLine(exception);
+                return StatusCode(503);
             }
 
             product.supplierId = null;
