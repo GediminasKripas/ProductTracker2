@@ -186,7 +186,7 @@ namespace ProductTracker.Controllers
                 apiResponse = "Failed!";
             }
 
-            return StatusCode(201, supplier);
+            return StatusCode(200, supplier);
 
         }
 
