@@ -71,6 +71,11 @@ namespace ProductTracker.Controllers
             Supplier supplier = null;
             Product product = await _context.Products.FindAsync(id);
 
+            if(product == null)
+            {
+                return BadRequest("Product with this id doesnt exist!");
+            }
+
             if (product.supplierId == null)
             {
                 return BadRequest("Product doesnt have supplier");
@@ -152,7 +157,7 @@ namespace ProductTracker.Controllers
         }
         //Task<ActionResult<Supplier>>
         [HttpPut("{id}/contacts")]
-        public async Task<IActionResult> PutProductContacts(long id, SupplierPut supplier)
+        public async Task<ActionResult<Supplier>> PutProductContacts(long id, SupplierPut supplier)
         {
 
             var product = await _context.Products.FindAsync(id);
@@ -181,7 +186,7 @@ namespace ProductTracker.Controllers
                 apiResponse = "Failed!";
             }
 
-            return Ok(apiResponse);
+            return StatusCode(201, supplier);
 
         }
 
@@ -284,7 +289,7 @@ namespace ProductTracker.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return NotFound();
+                return BadRequest("Product with this id doesnt exist!");
             }
 
             if (product.supplierId == null)
